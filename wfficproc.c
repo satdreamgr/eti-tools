@@ -183,43 +183,52 @@ int labelled(struct ens_info* e)
 int disp_ensemble(struct ens_info* e)
 {
 	struct service *p;
-	int i = 0;
+	int i = 1;
 	char *eeptype[] = {"eep-1a","eep-2a","eep-3a","eep-4a",
 			   "eep-1b","eep-2b","eep-3b","eep-4b"};
 
-	fprintf(stderr,"%s (%#04hx)\n",e->label,e->eid);
+	fprintf(stderr,"\nEnsemble: %s (%#04hx)\n",e->label,e->eid);
 	p = e->srv;
-
+	int rem = 864; /* 864 is DAB MULTIPLEXES CAPACITY UNITS */
+	fprintf(stderr,"****************************************************************************\n");
+	fprintf(stderr," #  Programme Label   Serv.Id.  P/S SubCh Capac.Units   Prot.   Bitrate Mode\n");
+	fprintf(stderr,"****************************************************************************\n");
 	while (p != NULL) {
-		fprintf(stderr,"%2d : ",i++);
+		fprintf(stderr,"%2d: ",i++);
 		if (strlen(p->label) != 0)
-			fprintf(stderr,"%16s (%#04x) ",p->label,p->sid);
+			fprintf(stderr,"%16s  (%#04x)  ",p->label,p->sid);
 		else
-			fprintf(stderr,"<No label>       (%#04x) ",p->sid);
+			fprintf(stderr,"<No label>       (%#04x)  ",p->sid);
 		if (p->pa != NULL) {
-			fprintf(stderr,"Pri subch=%2d start=%3d CUs=%3d ",p->pa->subchid,p->pa->startaddr,p->pa->subchsz);
+			fprintf(stderr,"Prm  %2d  %3d (%3d-%3d)  ",p->pa->subchid,p->pa->subchsz,p->pa->startaddr,p->pa->startaddr+p->pa->subchsz-1);
+			rem -= p->pa->subchsz;
 			if (p->pa->eepprot)
-				fprintf(stderr,"PL=%s bitrate=%d",eeptype[p->pa->protlvl],p->pa->bitrate);
+				fprintf(stderr,"%6s ",eeptype[p->pa->protlvl]);
 			else
-				fprintf(stderr,"PL=uep %d bitrate=%d",p->pa->protlvl,p->pa->bitrate);
+				fprintf(stderr,"uep-%d  ",p->pa->protlvl);
+			fprintf(stderr,"%3d Kb/s ",p->pa->bitrate);
+			fprintf(stderr,"DAB");
 			if (p->pa->dabplus)
-				fprintf(stderr," DAB+");
+				fprintf(stderr,"+");
 			if (p->sa != NULL) {
 				fprintf(stderr,"\n");
-				fprintf(stderr,"%2d :                           ",i++);
-				fprintf(stderr,"Sec subch=%2d start=%2d CUs=%3d ",p->sa->subchid,p->sa->startaddr,p->sa->subchsz);
+				fprintf(stderr,"%2d:                             ",i++);
+				fprintf(stderr,"Sec  %2d  %3d (%3d-%3d)  ",p->sa->subchid,p->sa->subchsz,p->sa->startaddr,p->sa->startaddr+p->sa->subchsz-1);
 				if (p->sa->eepprot)
-					fprintf(stderr,"PL=%s bitrate=%d",eeptype[p->sa->protlvl],p->sa->bitrate);
+					fprintf(stderr,"%6s ",eeptype[p->sa->protlvl]);
 				else
-					fprintf(stderr,"PL=uep %d bitrate=%d",p->sa->protlvl,p->sa->bitrate);
+					fprintf(stderr,"uep-%d  ",p->sa->protlvl);
+				fprintf(stderr,"%3d Kb/s ",p->sa->bitrate);
+				fprintf(stderr,"DAB");
 				if (p->sa->dabplus)
-					fprintf(stderr," DAB+");
+					fprintf(stderr,"+");
 			}
 		}
 		p = p->next;
 		fprintf(stderr,"\n");
 		fflush(stderr);
 	}
+	fprintf(stderr,"Free CUs on this multiplex = %3d \n",rem);
 	return 0;
 }
 
